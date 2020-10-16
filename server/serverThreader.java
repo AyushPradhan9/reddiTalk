@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -78,7 +79,7 @@ public class serverThreader extends Thread {
     }
 
     private void handleJoin(String[] tokens) {
-		if(tokens.length>2) {
+		if(tokens.length==2) {
 			String topic = tokens[1];
 			topicSet.add(topic);
 		}
@@ -115,10 +116,8 @@ public class serverThreader extends Thread {
 
         List<serverThreader> threadList = server.getThreadList();
         for(serverThreader thread : threadList) {
-        	if(isTopic) {
-        		System.out.println("2");
+        	if(isTopic) { 
         		if(thread.isMemberOfTopic(sendTo)) {
-        			System.out.println("1");
         			String outMsg = "msg " + sendTo + ":" + login + " " + body + "\n";
 	                thread.send(outMsg);
         		}

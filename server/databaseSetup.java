@@ -15,8 +15,6 @@ public class databaseSetup {
 		try {
 			url="jdbc:mysql://localhost:"+port+"/"+databaseName;
 			connection = DriverManager.getConnection(url,username,password);
-			temp setup = new temp();
-			setup.getInfo(databaseName,port,username,password);
 		} catch (SQLException e) {
 			return false;
 		}
