@@ -17,6 +17,7 @@ public class serverThreader extends Thread {
     private String login = null;
     private OutputStream outputStream;
     private HashSet<String> topicSet = new HashSet<>();
+    private serverDatabase data = new serverDatabase();
 
     public serverThreader(Server server,Socket clientSocket) {
         this.clientSocket = clientSocket;
@@ -63,7 +64,7 @@ public class serverThreader extends Thread {
                     handleMessage(tokensMsg);
                 }
                 else if("join".equalsIgnoreCase(cmd)) {
-                	handleJoin(tokens);
+                	handleJoin(outputStream, tokens);
                 }
                 else {
                     String msg = "Unknown Command: " + cmd + "\n";
@@ -78,17 +79,40 @@ public class serverThreader extends Thread {
     	return topicSet.contains(topic);
     }
 
-    private void handleJoin(String[] tokens) {
+    private void handleJoin(OutputStream outputStream,String[] tokens) throws IOException {
+    	String msg;
 		if(tokens.length==2) {
 			String topic = tokens[1];
 			topicSet.add(topic);
+			if(data.topicExist(topic)==0) {
+				data.topicSignup(topic);
+				msg = "Opened new topic!\nWelcome to "+topic+"\n";
+	            outputStream.write(msg.getBytes());
+			}
+			else if(data.topicExist(topic)==1) {
+				msg = "Existing topic found!\nWelcome to "+topic+"\n";
+				outputStream.write(msg.getBytes());
+			}
 		}
 		
 	}
 
-	private void handleUpdate(OutputStream outputStream, String[] tokens) {
-		
-		
+	private void handleUpdate(OutputStream outputStream, String[] tokens) throws IOException {
+		String msg;
+		if(tokens.length==4) {
+			String name=tokens[1];
+			String pass=tokens[2];
+			String newpass=tokens[3];
+			if(data.userExist(name, pass)==1 && login==name) {
+				data.userUpdate(name, pass, newpass);
+				msg="Successsfully changed to new password\n";
+				outputStream.write(msg.getBytes());
+			}
+			else if(data.userExist(name, pass)==0 || login!=name) {
+				msg="Matching user not found!\nTry again.\n";
+				outputStream.write(msg.getBytes());
+			}
+		}
 	}
 
 	private void handleSignup(OutputStream outputStream,String[] tokens) throws IOException {
@@ -96,14 +120,14 @@ public class serverThreader extends Thread {
 			String name = tokens[1];
 	        String password = tokens[2];
 	        String msg;
-	        serverDatabase data = new serverDatabase();
 	            
-	        if(data.userExist(name,password)==1) {
+	        if(data.userExist(name,password)==0) {
+	        	data.userSignup(name, password);
 	        	msg = "Signup successful\n";
 	            outputStream.write(msg.getBytes());
 	        }
-	        else if(data.userExist(name, password)==0) {
-	        	msg = "User already exist. Try logging in.\n";
+	        else if(data.userExist(name, password)==1) {
+	        	msg = "User already exist! Try logging in.\n";
 	        	outputStream.write(msg.getBytes());
 	        }
 		}
@@ -171,7 +195,7 @@ public class serverThreader extends Thread {
                 for(serverThreader threader : threadList) {
                     if (threader.getLogin() != null) {
                         if (!login.equals(threader.getLogin())) {
-                            String online = "Online " + threader.getLogin();
+                            String online = "Online " + threader.getLogin() + "\n";
                             send(online);
                         }
                     }

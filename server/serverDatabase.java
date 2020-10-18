@@ -20,8 +20,7 @@ public class serverDatabase {
 			pstmnt = connection.prepareStatement(sql);
 			pstmnt.setString(1,name);
 			resultSet = pstmnt.executeQuery();
-			if(!resultSet.next()) {
-				userSignup(name,pass);
+			if(resultSet.next()) {
 				return 1;
 			}
 		}
@@ -59,7 +58,7 @@ public class serverDatabase {
 			resultSet = stmnt.executeQuery(sql);
 			while(resultSet.next()) { 
 				 if(name.equalsIgnoreCase(resultSet.getString("username")) && pass.equalsIgnoreCase(resultSet.getString("password"))) {
-					 String s = "update user_value set password=? where name=?";
+					 String s = "update user_value set password=? where username=?";
 					 pstmnt = connection.prepareStatement(s);
 					 pstmnt.setString(1, newPass);
 					 pstmnt.setString(2, name);
@@ -99,7 +98,7 @@ public class serverDatabase {
 		return 0;
 	}
 	
-	public int groupExist(String name) {
+	public int topicExist(String name) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
 			sql = "SELECT * from topic_value WHERE topicname = ?";
@@ -107,7 +106,6 @@ public class serverDatabase {
 			pstmnt.setString(1,name);
 			resultSet = pstmnt.executeQuery();
 			if(resultSet.next()) {
-				groupSignup(name);
 				return 1;
 			}
 		}
@@ -119,7 +117,7 @@ public class serverDatabase {
 		return 0;
 	}
 	
-	public void groupSignup(String name) {
+	public void topicSignup(String name) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
 			sql = "INSERT INTO topic_value (topicname) VALUES (?)";

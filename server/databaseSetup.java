@@ -1,5 +1,4 @@
 import java.sql.*;
-import java.util.*;
 public class databaseSetup {
 	
 	public static String username;
@@ -50,8 +49,6 @@ public class databaseSetup {
 	}
 
 	public static void main(String[] args) throws SQLException {
-		
-		Scanner scan=new Scanner(System.in);
 		
 		String databaseName="redditalk";
 		System.out.println("Assigned database name: "+databaseName);
