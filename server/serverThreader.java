@@ -81,11 +81,12 @@ public class serverThreader extends Thread {
 
     private void handleJoin(OutputStream outputStream,String[] tokens) throws IOException {
     	String msg;
-		if(tokens.length==2) {
+		if(tokens.length==2 && data.userExist(login)==1) {
 			String topic = tokens[1];
 			topicSet.add(topic);
 			if(data.topicExist(topic)==0) {
 				data.topicSignup(topic);
+				data.setTopicUser(login, topic);
 				msg = "Opened new topic!\nWelcome to "+topic+"\n";
 	            outputStream.write(msg.getBytes());
 			}
@@ -94,7 +95,10 @@ public class serverThreader extends Thread {
 				outputStream.write(msg.getBytes());
 			}
 		}
-		
+		else if(data.userExist(login)==0) {
+			msg = "Try logining before joining a topic!\n";
+			outputStream.write(msg.getBytes());
+		}
 	}
 
 	private void handleUpdate(OutputStream outputStream, String[] tokens) throws IOException {
@@ -103,15 +107,19 @@ public class serverThreader extends Thread {
 			String name=tokens[1];
 			String pass=tokens[2];
 			String newpass=tokens[3];
-			if(data.userExist(name, pass)==1 && login==name) {
+			if(data.userExist(name)==1 && data.userExist(login)==1) {
 				data.userUpdate(name, pass, newpass);
 				msg="Successsfully changed to new password\n";
 				outputStream.write(msg.getBytes());
 			}
-			else if(data.userExist(name, pass)==0 || login!=name) {
+			else if(data.userExist(name)==0 || login!=name) {
 				msg="Matching user not found!\nTry again.\n";
 				outputStream.write(msg.getBytes());
 			}
+		}
+		else if(data.userExist(login)==0) {
+			msg = "Try logining before updating password!\n";
+			outputStream.write(msg.getBytes());
 		}
 	}
 
@@ -121,12 +129,12 @@ public class serverThreader extends Thread {
 	        String password = tokens[2];
 	        String msg;
 	            
-	        if(data.userExist(name,password)==0) {
+	        if(data.userExist(name)==0) {
 	        	data.userSignup(name, password);
 	        	msg = "Signup successful\n";
 	            outputStream.write(msg.getBytes());
 	        }
-	        else if(data.userExist(name, password)==1) {
+	        else if(data.userExist(name)==1) {
 	        	msg = "User already exist! Try logging in.\n";
 	        	outputStream.write(msg.getBytes());
 	        }

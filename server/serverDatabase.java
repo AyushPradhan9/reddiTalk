@@ -13,7 +13,7 @@ public class serverDatabase {
 	private Statement stmnt = null;
 	private ResultSet resultSet = null;
 	
-	public int userExist (String name, String pass) {
+	public int userExist (String name) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
 			sql = "SELECT * from user_value where username = ?";
@@ -125,6 +125,27 @@ public class serverDatabase {
 			pstmnt.setString(1,name);
 			pstmnt.executeUpdate();
 		}	
+		catch (SQLException ignore) {}
+		finally {
+	        if (resultSet != null) try { resultSet.close(); } catch (SQLException ignore) {}
+	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
+	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
+	    }
+	}
+	
+	public void setTopicUser(String name, String topic) {
+		try {
+			connection = DriverManager.getConnection(url,username,password);
+			sql = "INSERT INTO topic_users (user_id,topic_id)"
+					+ "SELECT user_value.user_id, topic_value.topic_id"
+					+ "FROM user_value,topic_value"
+					+ "WHERE user_value.username = (?)"
+					+ "AND topic_value.topicname = (?)";
+			pstmnt = connection.prepareStatement(sql);
+			pstmnt.setString(1,name);
+			pstmnt.setString(2, topic);
+			pstmnt.executeUpdate();
+		}
 		catch (SQLException ignore) {}
 		finally {
 	        if (resultSet != null) try { resultSet.close(); } catch (SQLException ignore) {}
