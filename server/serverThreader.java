@@ -86,11 +86,16 @@ public class serverThreader extends Thread {
 			topicSet.add(topic);
 			if(data.topicExist(topic)==0) {
 				data.topicSignup(topic);
-				data.setTopicUser(login, topic);
+				if(data.checkTopicUser(login, topic)==0) {
+					data.setTopicUser(login, topic);
+				}
 				msg = "Opened new topic!\nWelcome to "+topic+"\n";
 	            outputStream.write(msg.getBytes());
 			}
 			else if(data.topicExist(topic)==1) {
+				if(data.checkTopicUser(login, topic)==0) {
+					data.setTopicUser(login, topic);
+				}
 				msg = "Existing topic found!\nWelcome to "+topic+"\n";
 				outputStream.write(msg.getBytes());
 			}

@@ -151,7 +151,6 @@ public class databaseSetup {
 		    String sql = "CREATE TABLE topic_users ("
 		    		+ "topic_id bigint unsigned,"
 		    		+ "user_id bigint unsigned,"
-		    		+ "PRIMARY KEY(topic_id,user_id),"
 		    		+ "FOREIGN KEY (topic_id) REFERENCES topic_value(topic_id),"
 		    		+ "FOREIGN KEY (user_id) REFERENCES user_value(user_id)"
 		    		+ ");";

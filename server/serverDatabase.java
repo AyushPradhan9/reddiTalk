@@ -138,13 +138,38 @@ public class serverDatabase {
 			connection = DriverManager.getConnection(url,username,password);
 			sql = "INSERT INTO topic_users (user_id,topic_id)"
 					+ "SELECT user_value.user_id, topic_value.topic_id"
-					+ "FROM user_value,topic_value"
-					+ "WHERE user_value.username = (?)"
-					+ "AND topic_value.topicname = (?)";
+					+ " FROM user_value,topic_value"
+					+ " WHERE user_value.username = (?)"
+					+ " AND topic_value.topicname = (?)";
 			pstmnt = connection.prepareStatement(sql);
 			pstmnt.setString(1,name);
 			pstmnt.setString(2, topic);
 			pstmnt.executeUpdate();
+		}
+		catch (SQLException ignore) {
+			System.out.println(ignore);
+		}
+		finally {
+	        if (resultSet != null) try { resultSet.close(); } catch (SQLException ignore) {}
+	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
+	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
+	    }
+	}
+	
+	public int checkTopicUser(String name, String topic) {
+		try {
+			connection = DriverManager.getConnection(url,username,password);
+			sql = "SELECT user_id, topic_id"
+					+ " FROM topic_user"
+					+ " WHERE user_id = ?"
+					+ " AND topic_id = ?";
+			pstmnt = connection.prepareStatement(sql);
+			pstmnt.setString(1,name);
+			pstmnt.setString(2, topic);
+			resultSet = pstmnt.executeQuery();
+			if(resultSet.next()) {
+				return 1;
+			}
 		}
 		catch (SQLException ignore) {}
 		finally {
@@ -152,6 +177,28 @@ public class serverDatabase {
 	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
 	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
 	    }
+		return 0;
 	}
+	
+//	public void setDirectUser(String sender, String reciever) {
+//		try {
+//			connection = DriverManager.getConnection(url,username,password);
+//			sql = "INSERT INTO direct_users (sender_id,reciever_id)"
+//					+ " SELECT user_value.user_id, user_value.user_id"
+//					+ " FROM user_value,topic_value"
+//					+ " WHERE user_value.username = ?"
+//					+ " AND user_value.username = ?";
+//			pstmnt = connection.prepareStatement(sql);
+//			pstmnt.setString(1,sender);
+//			pstmnt.setString(2, reciever);
+//			pstmnt.executeUpdate();
+//		}
+//		catch (SQLException ignore) {}
+//		finally {
+//	        if (resultSet != null) try { resultSet.close(); } catch (SQLException ignore) {}
+//	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
+//	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
+//	    }
+//	}
 	
 }
