@@ -90,9 +90,58 @@ public class serverDatabase {
 			}
 		}	
 		catch (SQLException ignore) {}
-		finally {
+		finally { 
 	        if (resultSet != null) try { resultSet.close(); } catch (SQLException ignore) {}
 	        if (stmnt != null) try { stmnt.close(); } catch (SQLException ignore) {}
+	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
+	    }
+		return 0;
+	}
+	
+	public void userOnline (String name) {
+		try {
+			connection = DriverManager.getConnection(url,username,password);
+			sql = "UPDATE user_value SET online=1 WHERE username=?;";
+			pstmnt = connection.prepareStatement(sql);
+			pstmnt.setString(1,name);
+			pstmnt.executeUpdate();
+		}	
+		catch (SQLException ignore) {}
+		finally {
+	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
+	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
+	    }
+	}
+	
+	public void userOffline (String name) {
+		try {
+			connection = DriverManager.getConnection(url,username,password);
+			sql = "UPDATE user_value SET online=0 WHERE username=?;";
+			pstmnt = connection.prepareStatement(sql);
+			pstmnt.setString(1,name);
+			pstmnt.executeUpdate();
+		}	
+		catch (SQLException ignore) {}
+		finally {
+	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
+	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
+	    }
+	}
+	
+	public int checkOnline (String name) {
+		try {
+			connection = DriverManager.getConnection(url,username,password);
+			sql = "SELECT * from user_value where username=? AND online=1;";
+			pstmnt = connection.prepareStatement(sql);
+			pstmnt.setString(1,name);
+			resultSet = pstmnt.executeQuery();
+			if(resultSet.next()) {
+				return 1;
+			}
+		}	
+		catch (SQLException ignore) {}
+		finally {
+	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
 	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
 	    }
 		return 0;
@@ -103,7 +152,7 @@ public class serverDatabase {
 			connection = DriverManager.getConnection(url,username,password);
 			sql = "SELECT * from topic_value WHERE topicname = ?";
 			pstmnt = connection.prepareStatement(sql);
-			pstmnt.setString(1,name);
+			pstmnt.setString(1, name);
 			resultSet = pstmnt.executeQuery();
 			if(resultSet.next()) {
 				return 1;
@@ -122,7 +171,7 @@ public class serverDatabase {
 			connection = DriverManager.getConnection(url,username,password);
 			sql = "INSERT INTO topic_value (topicname) VALUES (?)";
 			pstmnt = connection.prepareStatement(sql);
-			pstmnt.setString(1,name);
+			pstmnt.setString(1, name);
 			pstmnt.executeUpdate();
 		}	
 		catch (SQLException ignore) {}
@@ -142,7 +191,7 @@ public class serverDatabase {
 					+ " WHERE user_value.username = (?)"
 					+ " AND topic_value.topicname = (?)";
 			pstmnt = connection.prepareStatement(sql);
-			pstmnt.setString(1,name);
+			pstmnt.setString(1, name);
 			pstmnt.setString(2, topic);
 			pstmnt.executeUpdate();
 		}
@@ -164,7 +213,7 @@ public class serverDatabase {
 					+ " WHERE user_id = ?"
 					+ " AND topic_id = ?";
 			pstmnt = connection.prepareStatement(sql);
-			pstmnt.setString(1,name);
+			pstmnt.setString(1, name);
 			pstmnt.setString(2, topic);
 			resultSet = pstmnt.executeQuery();
 			if(resultSet.next()) {
@@ -180,25 +229,51 @@ public class serverDatabase {
 		return 0;
 	}
 	
-//	public void setDirectUser(String sender, String reciever) {
+	public void sendDirectMess(String sender, String reciever, String mess) {
+		try {
+			connection = DriverManager.getConnection(url,username,password);
+			sql = "INSERT INTO direct_mess (sender_id,reciever_id,message) VALUES"
+				+ 	"("
+				+		"(SELECT a.user_id FROM user_value AS a WHERE username=?)"
+				+		",(SELECT b.user_id FROM user_value AS b WHERE username=?)"
+				+		",?"
+				+	");";
+			pstmnt = connection.prepareStatement(sql);
+			pstmnt.setString(1, sender);
+			pstmnt.setString(2, reciever);
+			pstmnt.setString(3, mess);
+			pstmnt.executeUpdate();
+		}
+		catch (SQLException ignore) {}
+		finally {
+	        if (resultSet != null) try { resultSet.close(); } catch (SQLException ignore) {}
+	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
+	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
+	    }
+	}
+
+//	public int checkDirectUser(String sender, String reciever) {
 //		try {
 //			connection = DriverManager.getConnection(url,username,password);
-//			sql = "INSERT INTO direct_users (sender_id,reciever_id)"
-//					+ " SELECT user_value.user_id, user_value.user_id"
-//					+ " FROM user_value,topic_value"
-//					+ " WHERE user_value.username = ?"
-//					+ " AND user_value.username = ?";
+//			sql = "SELECT sender_id, reciever_id"
+//					+ "FROM direct_users"
+//					+ "WHERE sender_id = (SELECT user_id FROM user_value WHERE username=?)"
+//					+ "AND reciever_id=(SELECT user_id FROM user_value WHERE username=?)";
 //			pstmnt = connection.prepareStatement(sql);
 //			pstmnt.setString(1,sender);
 //			pstmnt.setString(2, reciever);
-//			pstmnt.executeUpdate();
+//			resultSet = pstmnt.executeQuery();
+//			if(resultSet.next()) {
+//				return 1;
+//			}
 //		}
 //		catch (SQLException ignore) {}
 //		finally {
-//	        if (resultSet != null) try { resultSet.close(); } catch (SQLException ignore) {}
-//	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
-//	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
-//	    }
+//		    if (resultSet != null) try { resultSet.close(); } catch (SQLException ignore) {}
+//		    if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
+//		    if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
+//		}
+//		return 0;
 //	}
 	
 }

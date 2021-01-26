@@ -111,7 +111,9 @@ public class databaseSetup {
 		    String sql = "CREATE TABLE user_value("
 		    		+ "user_id bigint unsigned NOT NULL UNIQUE AUTO_INCREMENT PRIMARY KEY,"
 		    		+ "username varchar(60) NOT NULL UNIQUE,"
-		    		+ "password varchar(30) NOT NULL"
+		    		+ "password varchar(30) NOT NULL,"
+		    		+ "online int unsigned DEFAULT 0,"
+		    		+ "created_at timestamp default current_timestamp"
 		    		+ ");";
 		    stmt.executeUpdate(sql);
 		    
@@ -132,7 +134,8 @@ public class databaseSetup {
 			Statement stmt = connection.createStatement();
 		    String sql = "CREATE TABLE topic_value ("
 		    		+ "topic_id bigint unsigned NOT NULL UNIQUE AUTO_INCREMENT PRIMARY KEY,"
-		    		+ "topicname varchar(30) NOT NULL UNIQUE"
+		    		+ "topicname varchar(30) NOT NULL UNIQUE,"
+		    		+ "created_at timestamp default current_timestamp"
 		    		+ ");";   
 		    stmt.executeUpdate(sql);
 		    
@@ -151,6 +154,7 @@ public class databaseSetup {
 		    String sql = "CREATE TABLE topic_users ("
 		    		+ "topic_id bigint unsigned,"
 		    		+ "user_id bigint unsigned,"
+		    		+ "online int unsigned DEFAULT 0,"
 		    		+ "FOREIGN KEY (topic_id) REFERENCES topic_value(topic_id),"
 		    		+ "FOREIGN KEY (user_id) REFERENCES user_value(user_id)"
 		    		+ ");";
@@ -172,33 +176,13 @@ public class databaseSetup {
 		    		+ "mess_id bigint unsigned AUTO_INCREMENT,"
 		    		+ "user_id bigint unsigned,"
 		    		+ "message TEXT,"
-		    		+ "PRIMARY KEY(mess_id,user_id),"
-		    		+ "FOREIGN KEY (user_id) REFERENCES user_value(user_id)"
+		    		+ "send_at timestamp default current_timestamp,"
+		    		+ "PRIMARY KEY(mess_id),"
+		    		+ "FOREIGN KEY (user_id) REFERENCES topic_users(user_id)"
 		    		+ ");";
 		    stmt.executeUpdate(sql);
 		    
 		    System.out.println("Successfully created topic_mess table...\n");
-		}
-		
-		System.out.println("Checking existence of direct_users table...");
-		if(database.checkTableExist("direct_users")) {
-			System.out.println("direct_users table already exists...\n");
-		}
-		else {
-			System.out.println("direct_users table does not exists...");
-			System.out.println("Creating direct_users table in database...");
-			
-			Statement stmt = connection.createStatement();
-		    String sql = "CREATE TABLE direct_users("
-		    		+ "sender_id bigint unsigned,"
-		    		+ "reciever_id bigint unsigned,"
-		    		+ "PRIMARY KEY (sender_id, reciever_id),"
-		    		+ "FOREIGN KEY (sender_id) REFERENCES user_value(user_id),"
-		    		+ "FOREIGN KEY (reciever_id) REFERENCES user_value(user_id)"
-		    		+ ");";
-		    stmt.executeUpdate(sql);
-		    
-		    System.out.println("Successfully created direct_users table...\n");
 		}
 		
 		System.out.println("Checking existence of direct_mess table...");
@@ -212,10 +196,13 @@ public class databaseSetup {
 			Statement stmt = connection.createStatement();
 		    String sql = "CREATE TABLE direct_mess("
 		    		+ "mess_id bigint unsigned AUTO_INCREMENT,"
-		    		+ "user_id bigint unsigned,"
+		    		+ "sender_id bigint unsigned,"
+		    		+ "reciever_id bigint unsigned,"	
 		    		+ "message TEXT,"
-		    		+ "PRIMARY KEY (mess_id,user_id),"
-		    		+ "FOREIGN KEY (user_id) REFERENCES user_value(user_id)"
+		    		+ "send_at timestamp default current_timestamp,"
+		    		+ "PRIMARY KEY (mess_id),"
+		    		+ "FOREIGN KEY (sender_id) REFERENCES user_value(user_id),"
+		    		+ "FOREIGN KEY (reciever_id) REFERENCES user_value(user_id)"
 		    		+ ");";
 		    stmt.executeUpdate(sql);
 		    
