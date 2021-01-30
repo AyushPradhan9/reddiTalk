@@ -81,26 +81,35 @@ public class serverThreader extends Thread {
 
     private void handleJoin(OutputStream outputStream,String[] tokens) throws IOException {
     	String msg;
-		if(tokens.length==2 && data.userExist(login)==1) {
+		if(tokens.length==2 && data.userExist(login)) {
 			String topic = tokens[1];
 			topicSet.add(topic);
-			if(data.topicExist(topic)==0) {
+			
+			if(!data.topicExist(topic)) {
 				data.topicSignup(topic);
-				if(data.checkTopicUser(login, topic)==0) {
-					data.setTopicUser(login, topic);
-				}
+				data.setTopicUser(login, topic);
+				data.userTopicOnline(login, topic);
+				
 				msg = "Opened new topic!\nWelcome to "+topic+"\n";
 	            outputStream.write(msg.getBytes());
 			}
-			else if(data.topicExist(topic)==1) {
-				if(data.checkTopicUser(login, topic)==0) {
-					data.setTopicUser(login, topic);
-				}
-				msg = "Existing topic found!\nWelcome to "+topic+"\n";
+			
+			else if(data.topicExist(topic) && !data.checkTopicUser(login,topic)) {
+				data.setTopicUser(login, topic);
+				data.userTopicOnline(login, topic);
+				
+				msg = "Joined existing topic!\nWelcome to "+topic+"\n";
+				outputStream.write(msg.getBytes());
+			}
+			
+			else if(data.topicExist(topic) && data.checkTopicUser(login,topic)) {
+				data.userTopicOnline(login, topic);
+				
+				msg = "Welcome back to "+topic+"\n";
 				outputStream.write(msg.getBytes());
 			}
 		}
-		else if(data.userExist(login)==0) {
+		else if(!data.userExist(login)) {
 			msg = "Try logining before joining a topic!\n";
 			outputStream.write(msg.getBytes());
 		}
@@ -112,17 +121,17 @@ public class serverThreader extends Thread {
 			String name=tokens[1];
 			String pass=tokens[2];
 			String newpass=tokens[3];
-			if(data.userExist(name)==1 && data.userExist(login)==1) {
+			if(data.userExist(name) && data.userExist(login)) {
 				data.userUpdate(name, pass, newpass);
 				msg="Successsfully changed to new password\n";
 				outputStream.write(msg.getBytes());
 			}
-			else if(data.userExist(name)==0 || login!=name) {
+			else if(!data.userExist(name) || login!=name) {
 				msg="Matching user not found!\nTry again.\n";
 				outputStream.write(msg.getBytes());
 			}
 		}
-		else if(data.userExist(login)==0) {
+		else if(!data.userExist(login)) {
 			msg = "Try logining before updating password!\n";
 			outputStream.write(msg.getBytes());
 		}
@@ -134,16 +143,16 @@ public class serverThreader extends Thread {
 	        String password = tokens[2];
 	        String msg;
 	            
-	        if(data.userExist(name)==0 && login==null) {
+	        if(!data.userExist(name) && login==null) {
 	        	data.userSignup(name, password);
 	        	msg = "Signup successful\n";
 	            outputStream.write(msg.getBytes());
 	        }
-	        if(data.userExist(name)==0 && login!=null) {
+	        else if(!data.userExist(name) && login!=null) {
 	        	msg = "Logoff from your previous account to make a new one!\n";
 	            outputStream.write(msg.getBytes());
 	        }
-	        else if(data.userExist(name)==1) {
+	        else if(data.userExist(name)) {
 	        	msg = "User already exist! Try logging in.\n";
 	        	outputStream.write(msg.getBytes());
 	        }
@@ -154,33 +163,38 @@ public class serverThreader extends Thread {
         String sendTo = tokens[1];
         String body = tokens[2];
         boolean isTopic = (sendTo.charAt(0) == '#') ;
-
-        List<serverThreader> threadList = server.getThreadList();
-        for(serverThreader thread : threadList) {
-        	if(isTopic) { 
-        		if(thread.isMemberOfTopic(sendTo)) {
-        			String outMsg = "msg " + sendTo + ":" + login + " " + body + "\n";
-	                thread.send(outMsg);
-        		}
-        	}
-        	else {
-	            if (sendTo.equalsIgnoreCase(thread.getLogin())) {
-	            	data.sendDirectMess(login, sendTo, body);
-	                String outMsg = "msg " + login + " " + body + "\n";
-	                thread.send(outMsg);
-	            }
-        	}
+        
+        if(login!=null && data.checkOnline(login)) {
+	        List<serverThreader> threadList = server.getThreadList();
+	        for(serverThreader thread : threadList) {
+	        	
+	        	if(isTopic && data.checkTopicUser(login,sendTo)) { 
+	        		String outMsg = "msg " + sendTo + ":" + login + " " + body + "\n";
+		            thread.send(outMsg);
+	        	}
+	        	
+	        	else if (sendTo.equalsIgnoreCase(thread.getLogin())) {
+		            data.sendDirectMess(login, sendTo, body);
+		            String outMsg = "msg " + login + " " + body + "\n";
+		            thread.send(outMsg);
+		        }
+	        }
         }
+        else {
+			String msg = "Try logining before sending a message!\n";
+			outputStream.write(msg.getBytes());
+		}
     }
 
     private void handleLogoff() throws IOException {
     	data.userOffline(login);
+    	data.userTopicOffline(login);
         server.removeThreader(this);
         List<serverThreader> threadList = server.getThreadList();
-        String onlineMsg = "Offline " + login + "\n";
+        String offlineMsg = "Offline " + login + "\n";
         for(serverThreader threader : threadList) {
-            if (!login.equals(threader.getLogin())) {
-                threader.send(onlineMsg);
+            if (!data.checkOnline(login)) {
+                threader.send(offlineMsg);
             }
         }
         login=null;
@@ -202,8 +216,8 @@ public class serverThreader extends Thread {
             String login = tokens[1];
             String password = tokens[2];
             serverDatabase data = new serverDatabase();
-
-            if (data.userLogin(login,password)==1 && data.checkOnline(login)==0 && this.login==null) {
+            
+            if (data.userLogin(login,password) && !data.checkOnline(login) && this.login==null) {
             	data.userOnline(login);
                 String msg = "Login successful\n";
                 outputStream.write(msg.getBytes());
@@ -229,7 +243,7 @@ public class serverThreader extends Thread {
                     }
                 }
             }
-            else if (data.userLogin(login,password)==1 && data.checkOnline(login)==1) {
+            else if (data.userLogin(login,password) && data.checkOnline(login)) {
             	String msg = "Logging off from previous session!\nPlease try logging in once again\n";
                 outputStream.write(msg.getBytes());
                 data.userOffline(login);

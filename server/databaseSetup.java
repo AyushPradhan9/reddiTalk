@@ -175,9 +175,11 @@ public class databaseSetup {
 		    String sql = "CREATE TABLE topic_mess("
 		    		+ "mess_id bigint unsigned AUTO_INCREMENT,"
 		    		+ "user_id bigint unsigned,"
+		    		+ "topic_id bigint unsigned,"
 		    		+ "message TEXT,"
 		    		+ "send_at timestamp default current_timestamp,"
 		    		+ "PRIMARY KEY(mess_id),"
+		    		+ "FOREIGN KEY (topic_id) REFERENCES topic_users(topic_id),"
 		    		+ "FOREIGN KEY (user_id) REFERENCES topic_users(user_id)"
 		    		+ ");";
 		    stmt.executeUpdate(sql);

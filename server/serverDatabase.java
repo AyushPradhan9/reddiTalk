@@ -13,7 +13,7 @@ public class serverDatabase {
 	private Statement stmnt = null;
 	private ResultSet resultSet = null;
 	
-	public int userExist (String name) {
+	public boolean userExist (String name) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
 			sql = "SELECT * from user_value where username = ?";
@@ -21,7 +21,7 @@ public class serverDatabase {
 			pstmnt.setString(1,name);
 			resultSet = pstmnt.executeQuery();
 			if(resultSet.next()) {
-				return 1;
+				return true;
 			}
 		}
 		catch (SQLException ignore) {}
@@ -31,7 +31,7 @@ public class serverDatabase {
 	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
 
 	    }
-		return 0;
+		return false;
 	}
 	
 	public void userSignup (String name, String pass) {
@@ -50,7 +50,7 @@ public class serverDatabase {
 	    }
 	}
 	
-	public int userUpdate (String name, String pass, String newPass) {
+	public boolean userUpdate (String name, String pass, String newPass) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
 			stmnt = connection.createStatement();
@@ -63,7 +63,7 @@ public class serverDatabase {
 					 pstmnt.setString(1, newPass);
 					 pstmnt.setString(2, name);
 					 pstmnt.executeUpdate();
-					 return 1;
+					 return true;
 				 }
 			}
 		}	
@@ -74,10 +74,10 @@ public class serverDatabase {
 	        if (stmnt != null) try { stmnt.close(); } catch (SQLException ignore) {}
 	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
 	    }
-		return 0;
+		return false;
 	}
 	
-	public int userLogin (String name, String pass) {
+	public boolean userLogin (String name, String pass) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
 			stmnt = connection.createStatement();
@@ -85,7 +85,7 @@ public class serverDatabase {
 			resultSet = stmnt.executeQuery(sql);
 			while(resultSet.next()) { 
 				 if(name.equalsIgnoreCase(resultSet.getString("username")) && pass.equalsIgnoreCase(resultSet.getString("password"))) {
-					 return 1;
+					 return true;
 				 }
 			}
 		}	
@@ -95,7 +95,7 @@ public class serverDatabase {
 	        if (stmnt != null) try { stmnt.close(); } catch (SQLException ignore) {}
 	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
 	    }
-		return 0;
+		return false;
 	}
 	
 	public void userOnline (String name) {
@@ -128,7 +128,7 @@ public class serverDatabase {
 	    }
 	}
 	
-	public int checkOnline (String name) {
+	public boolean checkOnline (String name) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
 			sql = "SELECT * from user_value where username=? AND online=1;";
@@ -136,7 +136,7 @@ public class serverDatabase {
 			pstmnt.setString(1,name);
 			resultSet = pstmnt.executeQuery();
 			if(resultSet.next()) {
-				return 1;
+				return true;
 			}
 		}	
 		catch (SQLException ignore) {}
@@ -144,10 +144,10 @@ public class serverDatabase {
 	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
 	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
 	    }
-		return 0;
+		return false;
 	}
 	
-	public int topicExist(String name) {
+	public boolean topicExist(String name) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
 			sql = "SELECT * from topic_value WHERE topicname = ?";
@@ -155,7 +155,7 @@ public class serverDatabase {
 			pstmnt.setString(1, name);
 			resultSet = pstmnt.executeQuery();
 			if(resultSet.next()) {
-				return 1;
+				return true;
 			}
 		}
 		catch (SQLException ignore) {}
@@ -163,7 +163,7 @@ public class serverDatabase {
 	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
 	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
 	    }
-		return 0;
+		return false;
 	}
 	
 	public void topicSignup(String name) {
@@ -205,19 +205,19 @@ public class serverDatabase {
 	    }
 	}
 	
-	public int checkTopicUser(String name, String topic) {
+	public boolean checkTopicUser(String name, String topic) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
 			sql = "SELECT user_id, topic_id"
-					+ " FROM topic_user"
-					+ " WHERE user_id = ?"
-					+ " AND topic_id = ?";
+					+ "FROM topic_users"
+					+ "WHERE user_id = (SELECT user_id FROM user_value WHERE username=?)"
+					+ "AND topic_id=(SELECT topic_id FROM topic_value WHERE topicname=?);";
 			pstmnt = connection.prepareStatement(sql);
 			pstmnt.setString(1, name);
 			pstmnt.setString(2, topic);
 			resultSet = pstmnt.executeQuery();
 			if(resultSet.next()) {
-				return 1;
+				return true;
 			}
 		}
 		catch (SQLException ignore) {}
@@ -226,7 +226,64 @@ public class serverDatabase {
 	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
 	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
 	    }
-		return 0;
+		return false;
+	}
+	
+	public void userTopicOnline (String name, String topic) {
+		try {
+			connection = DriverManager.getConnection(url,username,password);
+			sql = "UPDATE topic_users SET topic_users.online=1"
+					+ "WHERE user_id = (SELECT user_id FROM user_value WHERE username=?)"
+					+ "AND topic_id=(SELECT topic_id FROM topic_value WHERE topicname=?);";
+			pstmnt = connection.prepareStatement(sql);
+			pstmnt.setString(1,name);
+			pstmnt.setString(2,topic);
+			pstmnt.executeUpdate();
+		}	
+		catch (SQLException ignore) {}
+		finally {
+	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
+	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
+	    }
+	}
+	
+	public void userTopicOffline (String name) {
+		try {
+			connection = DriverManager.getConnection(url,username,password);
+			sql = "UPDATE topic_users SET topic_users.online=0"
+					+ "WHERE user_id = (SELECT user_id FROM user_value WHERE username=?);";
+			pstmnt = connection.prepareStatement(sql);
+			pstmnt.setString(1,name);
+			pstmnt.executeUpdate();
+		}	
+		catch (SQLException ignore) {}
+		finally {
+	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
+	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
+	    }
+	}
+	
+	public boolean checkTopicOnline (String name, String topic) {
+		try {
+			connection = DriverManager.getConnection(url,username,password);
+			sql = "SELECT * FROM topic_users"
+					+ "WHERE (user_id = (SELECT user_id FROM user_value WHERE username=?)"
+					+ "AND topic_id=(SELECT topic_id FROM topic_value WHERE topicname=?))"
+					+ "AND online=1;";
+			pstmnt = connection.prepareStatement(sql);
+			pstmnt.setString(1,name);
+			pstmnt.setString(2,topic);
+			resultSet = pstmnt.executeQuery();
+			if(resultSet.next()) {
+				return true;
+			}
+		}	
+		catch (SQLException ignore) {}
+		finally {
+	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
+	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
+	    }
+		return false;
 	}
 	
 	public void sendDirectMess(String sender, String reciever, String mess) {
