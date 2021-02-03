@@ -16,7 +16,6 @@ public class serverThreader extends Thread {
     public final Server server;
     private String login = null;
     private OutputStream outputStream;
-    private HashSet<String> topicSet = new HashSet<>();
     private serverDatabase data = new serverDatabase();
 
     public serverThreader(Server server,Socket clientSocket) {
@@ -66,6 +65,9 @@ public class serverThreader extends Thread {
                 else if("join".equalsIgnoreCase(cmd)) {
                 	handleJoin(outputStream, tokens);
                 }
+                else if("leave".equalsIgnoreCase(cmd)) {
+                	handleLeave(outputStream, tokens);
+                }
                 else {
                     String msg = "Unknown Command: " + cmd + "\n";
                     outputStream.write(msg.getBytes());
@@ -75,20 +77,30 @@ public class serverThreader extends Thread {
         clientSocket.close();
     }
     
-    public boolean isMemberOfTopic(String topic) {
-    	return topicSet.contains(topic);
-    }
+    private void handleLeave(OutputStream outputStream, String[] tokens) throws IOException {
+		String msg;
+		if(tokens.length==2 && data.userExist(login)) {
+			String topic = tokens[1];
+			if(data.topicExist(topic)) {
+				data.deleteTopicUser(login,topic);
+				msg="Successfully left "+topic+'\n';
+				outputStream.write(msg.getBytes());
+			}
+			else {
+				msg="You are not joined in "+topic+'\n';
+				outputStream.write(msg.getBytes());
+			}
+		}
+	}
 
     private void handleJoin(OutputStream outputStream,String[] tokens) throws IOException {
     	String msg;
 		if(tokens.length==2 && data.userExist(login)) {
 			String topic = tokens[1];
-			topicSet.add(topic);
 			
 			if(!data.topicExist(topic)) {
 				data.topicSignup(topic);
 				data.setTopicUser(login, topic);
-				data.userTopicOnline(login, topic);
 				
 				msg = "Opened new topic!\nWelcome to "+topic+"\n";
 	            outputStream.write(msg.getBytes());
@@ -96,14 +108,12 @@ public class serverThreader extends Thread {
 			
 			else if(data.topicExist(topic) && !data.checkTopicUser(login,topic)) {
 				data.setTopicUser(login, topic);
-				data.userTopicOnline(login, topic);
 				
 				msg = "Joined existing topic!\nWelcome to "+topic+"\n";
 				outputStream.write(msg.getBytes());
 			}
 			
 			else if(data.topicExist(topic) && data.checkTopicUser(login,topic)) {
-				data.userTopicOnline(login, topic);
 				
 				msg = "Welcome back to "+topic+"\n";
 				outputStream.write(msg.getBytes());
@@ -169,6 +179,7 @@ public class serverThreader extends Thread {
 	        for(serverThreader thread : threadList) {
 	        	
 	        	if(isTopic && data.checkTopicUser(login,sendTo)) { 
+	        		data.sendTopicMess(login, sendTo, body);
 	        		String outMsg = "msg " + sendTo + ":" + login + " " + body + "\n";
 		            thread.send(outMsg);
 	        	}
@@ -188,7 +199,6 @@ public class serverThreader extends Thread {
 
     private void handleLogoff() throws IOException {
     	data.userOffline(login);
-    	data.userTopicOffline(login);
         server.removeThreader(this);
         List<serverThreader> threadList = server.getThreadList();
         String offlineMsg = "Offline " + login + "\n";
@@ -199,16 +209,6 @@ public class serverThreader extends Thread {
         }
         login=null;
         clientSocket.close();
-    }
-
-    public String getLogin() {
-        return login;
-    } 
-
-    private void send(String online) throws IOException {
-        if (login != null){
-            outputStream.write(online.getBytes()); 
-        }
     }
 
     private void handleLogin(OutputStream outputStream, String[] tokens) throws IOException {
@@ -249,9 +249,19 @@ public class serverThreader extends Thread {
                 data.userOffline(login);
             }
             else{
-                String msg = "Error login\n";
+                String msg = "No such user found!\n";
                 outputStream.write(msg.getBytes());
             }
+        }
+    }
+    
+    public String getLogin() {
+        return login;
+    } 
+
+    private void send(String online) throws IOException {
+        if (login != null){
+            outputStream.write(online.getBytes()); 
         }
     }
 }

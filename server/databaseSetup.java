@@ -154,9 +154,8 @@ public class databaseSetup {
 		    String sql = "CREATE TABLE topic_users ("
 		    		+ "topic_id bigint unsigned,"
 		    		+ "user_id bigint unsigned,"
-		    		+ "online int unsigned DEFAULT 0,"
-		    		+ "FOREIGN KEY (topic_id) REFERENCES topic_value(topic_id),"
-		    		+ "FOREIGN KEY (user_id) REFERENCES user_value(user_id)"
+		    		+ "FOREIGN KEY (topic_id) REFERENCES topic_value(topic_id) ON DELETE CASCADE,"
+		    		+ "FOREIGN KEY (user_id) REFERENCES user_value(user_id) ON DELETE CASCADE"
 		    		+ ");";
 		    stmt.executeUpdate(sql);
 		    
@@ -180,7 +179,7 @@ public class databaseSetup {
 		    		+ "send_at timestamp default current_timestamp,"
 		    		+ "PRIMARY KEY(mess_id),"
 		    		+ "FOREIGN KEY (topic_id) REFERENCES topic_users(topic_id),"
-		    		+ "FOREIGN KEY (user_id) REFERENCES topic_users(user_id)"
+		    		+ "FOREIGN KEY (user_id) REFERENCES topic_users(user_id) ON DELETE CASCADE"
 		    		+ ");";
 		    stmt.executeUpdate(sql);
 		    
@@ -203,8 +202,8 @@ public class databaseSetup {
 		    		+ "message TEXT,"
 		    		+ "send_at timestamp default current_timestamp,"
 		    		+ "PRIMARY KEY (mess_id),"
-		    		+ "FOREIGN KEY (sender_id) REFERENCES user_value(user_id),"
-		    		+ "FOREIGN KEY (reciever_id) REFERENCES user_value(user_id)"
+		    		+ "FOREIGN KEY (sender_id) REFERENCES user_value(user_id) ON DELETE CASCADE,"
+		    		+ "FOREIGN KEY (reciever_id) REFERENCES user_value(user_id) ON DELETE CASCADE"
 		    		+ ");";
 		    stmt.executeUpdate(sql);
 		    
