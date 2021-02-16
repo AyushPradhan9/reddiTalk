@@ -4,8 +4,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -81,8 +79,8 @@ public class serverThreader extends Thread {
 		String msg;
 		if(tokens.length==2 && data.userExist(login)) {
 			String topic = tokens[1];
-			if(data.topicExist(topic)) {
-				data.deleteTopicUser(login,topic);
+			if(data.checkTopicUser(login,topic)) {
+				data.leaveTopicUser(login,topic);
 				msg="Successfully left "+topic+'\n';
 				outputStream.write(msg.getBytes());
 			}
@@ -131,19 +129,19 @@ public class serverThreader extends Thread {
 			String name=tokens[1];
 			String pass=tokens[2];
 			String newpass=tokens[3];
-			if(data.userExist(name) && data.userExist(login)) {
+			if(login.equalsIgnoreCase(name) && data.userLogin(name,pass)) {
 				data.userUpdate(name, pass, newpass);
 				msg="Successsfully changed to new password\n";
 				outputStream.write(msg.getBytes());
 			}
-			else if(!data.userExist(name) || login!=name) {
-				msg="Matching user not found!\nTry again.\n";
+			else if(!login.equalsIgnoreCase(name)) {
+				msg="Can't change other user's password!\n";
 				outputStream.write(msg.getBytes());
 			}
-		}
-		else if(!data.userExist(login)) {
-			msg = "Try logining before updating password!\n";
-			outputStream.write(msg.getBytes());
+			else if(!data.userLogin(name,pass)) {
+				msg="Username and current password doesn't match!\nTry again!\n";
+				outputStream.write(msg.getBytes());
+			}
 		}
 	}
 
@@ -174,14 +172,16 @@ public class serverThreader extends Thread {
         String body = tokens[2];
         boolean isTopic = (sendTo.charAt(0) == '#') ;
         
-        if(login!=null && data.checkOnline(login)) {
+        if(login!=null) {
 	        List<serverThreader> threadList = server.getThreadList();
 	        for(serverThreader thread : threadList) {
 	        	
-	        	if(isTopic && data.checkTopicUser(login,sendTo)) { 
-	        		data.sendTopicMess(login, sendTo, body);
-	        		String outMsg = "msg " + sendTo + ":" + login + " " + body + "\n";
-		            thread.send(outMsg);
+	        	if(isTopic) { 
+	        		if(data.checkTopicUser(thread.toString(),sendTo)) { 
+		        		data.sendTopicMess(login, sendTo, body);
+		        		String outMsg = "msg " + sendTo + ":" + login + " " + body + "\n";
+			            thread.send(outMsg);
+	        		}
 	        	}
 	        	
 	        	else if (sendTo.equalsIgnoreCase(thread.getLogin())) {
@@ -198,12 +198,11 @@ public class serverThreader extends Thread {
     }
 
     private void handleLogoff() throws IOException {
-    	data.userOffline(login);
         server.removeThreader(this);
         List<serverThreader> threadList = server.getThreadList();
         String offlineMsg = "Offline " + login + "\n";
         for(serverThreader threader : threadList) {
-            if (!data.checkOnline(login)) {
+            if (!login.equals(threader.getLogin())) {
                 threader.send(offlineMsg);
             }
         }
@@ -217,16 +216,14 @@ public class serverThreader extends Thread {
             String password = tokens[2];
             serverDatabase data = new serverDatabase();
             
-            if (data.userLogin(login,password) && !data.checkOnline(login) && this.login==null) {
-            	data.userOnline(login);
+            if (data.userLogin(login,password) && this.login==null) {
                 String msg = "Login successful\n";
                 outputStream.write(msg.getBytes());
                 this.login = login;
                 System.out.println("Welcome " + login);
                 
                 List<serverThreader> threadList = server.getThreadList();
-                
-                // send current user all other online logins
+      
                 for(serverThreader threader : threadList) {
                     if (threader.getLogin() != null) {
                         if (!login.equals(threader.getLogin())) {
@@ -235,18 +232,13 @@ public class serverThreader extends Thread {
                         }
                     }
                 } 
-                // send other online users current user's status
+                
                 String onlineMsg = "Online " + login + "\n";
                 for(serverThreader threader : threadList) {
                     if (!login.equals(threader.getLogin())) {
                         threader.send(onlineMsg);
                     }
                 }
-            }
-            else if (data.userLogin(login,password) && data.checkOnline(login)) {
-            	String msg = "Logging off from previous session!\nPlease try logging in once again\n";
-                outputStream.write(msg.getBytes());
-                data.userOffline(login);
             }
             else{
                 String msg = "No such user found!\n";

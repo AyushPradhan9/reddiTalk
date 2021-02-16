@@ -1,2 +1,1 @@
-log off before login to same account from different session - in handleLogin
-complete sendTopicmess in serverDatabase
+multiple topic msgs

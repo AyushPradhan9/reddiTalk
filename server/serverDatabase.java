@@ -16,7 +16,7 @@ public class serverDatabase {
 	public boolean userExist (String name) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
-			sql = "SELECT * from user_value where username = (?)";
+			sql = "SELECT * FROM user_value WHERE username = (?);";
 			pstmnt = connection.prepareStatement(sql);
 			pstmnt.setString(1,name);
 			resultSet = pstmnt.executeQuery();
@@ -37,7 +37,7 @@ public class serverDatabase {
 	public void userSignup (String name, String pass) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
-			sql = "INSERT INTO user_value (username, password) VALUES (?, ?)";
+			sql = "INSERT INTO user_value (username, password) VALUES (?, ?);";
 			pstmnt = connection.prepareStatement(sql);
 			pstmnt.setString(1,name);
 			pstmnt.setString(2,pass);
@@ -54,11 +54,11 @@ public class serverDatabase {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
 			stmnt = connection.createStatement();
-			sql = ("SELECT * FROM user_value");
+			sql = ("SELECT * FROM user_value;");
 			resultSet = stmnt.executeQuery(sql);
 			while(resultSet.next()) { 
 				 if(name.equals(resultSet.getString("username")) && pass.equals(resultSet.getString("password"))) {
-					 String s = "update user_value set password=? where username=?";
+					 String s = "UPDATE user_value SET password=(?) WHERE username=(?);";
 					 pstmnt = connection.prepareStatement(s);
 					 pstmnt.setString(1, newPass);
 					 pstmnt.setString(2, name);
@@ -77,11 +77,11 @@ public class serverDatabase {
 		return false;
 	}
 	
-	public boolean userLogin (String name, String pass) {
+	public boolean userLogin(String name, String pass) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
 			stmnt = connection.createStatement();
-			sql = ("SELECT * FROM user_value where username=(?) and password=(?);");
+			sql = ("SELECT * FROM user_value WHERE username=(?) AND password=(?);");
 			pstmnt = connection.prepareStatement(sql);
 			pstmnt.setString(1, name);
 			pstmnt.setString(2, pass);
@@ -99,59 +99,10 @@ public class serverDatabase {
 		return false;
 	}
 	
-	public void userOnline (String name) {
-		try {
-			connection = DriverManager.getConnection(url,username,password);
-			sql = "UPDATE user_value SET online=1 WHERE username=(?);";
-			pstmnt = connection.prepareStatement(sql);
-			pstmnt.setString(1,name);
-			pstmnt.executeUpdate();
-		}	
-		catch (SQLException ignore) {}
-		finally {
-	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
-	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
-	    }
-	}
-	
-	public void userOffline (String name) {
-		try {
-			connection = DriverManager.getConnection(url,username,password);
-			sql = "UPDATE user_value SET online=0 WHERE username=(?);";
-			pstmnt = connection.prepareStatement(sql);
-			pstmnt.setString(1,name);
-			pstmnt.executeUpdate();
-		}	
-		catch (SQLException ignore) {}
-		finally {
-	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
-	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
-	    }
-	}
-	
-	public boolean checkOnline (String name) {
-		try {
-			connection = DriverManager.getConnection(url,username,password);
-			sql = "SELECT * from user_value where username=(?) AND online=1;";
-			pstmnt = connection.prepareStatement(sql);
-			pstmnt.setString(1,name);
-			resultSet = pstmnt.executeQuery();
-			if(resultSet.next()) {
-				return true;
-			}
-		}	
-		catch (SQLException ignore) {}
-		finally {
-	        if (pstmnt != null) try { pstmnt.close(); } catch (SQLException ignore) {}
-	        if (connection != null) try { connection.close(); } catch (SQLException ignore) {}
-	    }
-		return false;
-	}
-	
 	public boolean topicExist(String name) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
-			sql = "SELECT * from topic_value WHERE topicname = (?)";
+			sql = "SELECT * from topic_value WHERE topicname = (?);";
 			pstmnt = connection.prepareStatement(sql);
 			pstmnt.setString(1, name);
 			resultSet = pstmnt.executeQuery();
@@ -170,7 +121,7 @@ public class serverDatabase {
 	public void topicSignup(String name) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
-			sql = "INSERT INTO topic_value (topicname) VALUES (?)";
+			sql = "INSERT INTO topic_value (topicname) VALUES (?);";
 			pstmnt = connection.prepareStatement(sql);
 			pstmnt.setString(1, name);
 			pstmnt.executeUpdate();
@@ -186,11 +137,11 @@ public class serverDatabase {
 	public void setTopicUser(String name, String topic) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
-			sql = "INSERT INTO topic_users (user_id,topic_id)"
-					+ "SELECT user_value.user_id, topic_value.topic_id"
-					+ " FROM user_value,topic_value"
-					+ " WHERE user_value.username = (?)"
-					+ " AND topic_value.topicname = (?)";
+			sql = "INSERT INTO topic_users (username,topicname) VALUES"
+					+ 	"("
+					+		"(?),"
+					+		"(?)"
+					+	");";
 			pstmnt = connection.prepareStatement(sql);
 			pstmnt.setString(1, name);
 			pstmnt.setString(2, topic);
@@ -207,10 +158,11 @@ public class serverDatabase {
 	public boolean checkTopicUser(String name, String topic) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
-			sql = "SELECT user_id, topic_id"
+			sql = "SELECT username, topicname"
 					+ " FROM topic_users"
-					+ " WHERE user_id = (SELECT user_id FROM user_value WHERE username=(?))"
-					+ " AND topic_id = (SELECT topic_id FROM topic_value WHERE topicname=(?));";
+					+ " WHERE username = (?)"
+					+ " AND topicname = (?)"
+					+ " AND left_group=0;";
 			pstmnt = connection.prepareStatement(sql);
 			pstmnt.setString(1, name);
 			pstmnt.setString(2, topic);
@@ -232,11 +184,11 @@ public class serverDatabase {
 	public void sendDirectMess(String sender, String reciever, String mess) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
-			sql = "INSERT INTO direct_mess (sender_id,reciever_id,message) VALUES"
+			sql = "INSERT INTO direct_mess (sender_name,reciever_name,message) VALUES"
 				+ 	"("
-				+		"(SELECT a.user_id FROM user_value AS a WHERE username=(?))"
-				+		",(SELECT b.user_id FROM user_value AS b WHERE username=(?))"
-				+		",?"
+				+		"(?),"
+				+		"(?),"
+				+		"(?)"
 				+	");";
 			pstmnt = connection.prepareStatement(sql);
 			pstmnt.setString(1, sender);
@@ -252,12 +204,10 @@ public class serverDatabase {
 	    }
 	}
 	
-	public void deleteTopicUser(String name, String topic) {
+	public void leaveTopicUser(String name, String topic) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
-			sql = "DELETE FROM topic_users"
-					+ " WHERE user_id = (SELECT user_id FROM user_value WHERE username=(?))"
-					+ " AND topic_id = (SELECT topic_id FROM topic_value WHERE topicname=(?));";
+			sql = "UPDATE topic_users SET left_group=1 WHERE username=(?) AND topicname=(?);";
 			pstmnt = connection.prepareStatement(sql);
 			pstmnt.setString(1, name);
 			pstmnt.setString(2, topic);
@@ -274,12 +224,12 @@ public class serverDatabase {
 	public void sendTopicMess(String name, String topic, String mess) {
 		try {
 			connection = DriverManager.getConnection(url,username,password);
-			sql = "INSERT INTO topic_mess (user_id,topic_id,message) VALUES"
+			sql = "INSERT INTO topic_mess (username, topicname, message) VALUES "
 					+ "("
-					+ " (SELECT user_id FROM topic_users WHERE user_id IN (SELECT user_id FROM user_value WHERE username=(?)))"
-					+ " ,(SELECT topic_id FROM topic_users WHERE topic_id IN (SELECT topic_id FROM topic_value WHERE topicname=(?)))"
-					+ " ,(?)"
-					+ " );";
+					+ " (?), "
+					+ " (?), "
+					+ " (?)"
+					+ ");";
 			pstmnt = connection.prepareStatement(sql);
 			pstmnt.setString(1, name);
 			pstmnt.setString(2, topic);

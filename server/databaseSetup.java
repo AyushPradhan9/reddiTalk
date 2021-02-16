@@ -109,10 +109,9 @@ public class databaseSetup {
 			
 			Statement stmt = connection.createStatement();
 		    String sql = "CREATE TABLE user_value("
-		    		+ "user_id bigint unsigned NOT NULL UNIQUE AUTO_INCREMENT PRIMARY KEY,"
-		    		+ "username varchar(60) NOT NULL UNIQUE,"
+		    		+ "user_id bigint unsigned NOT NULL UNIQUE AUTO_INCREMENT,"
+		    		+ "username varchar(60) PRIMARY KEY,"
 		    		+ "password varchar(30) NOT NULL,"
-		    		+ "online int unsigned DEFAULT 0,"
 		    		+ "created_at timestamp default current_timestamp"
 		    		+ ");";
 		    stmt.executeUpdate(sql);
@@ -133,8 +132,8 @@ public class databaseSetup {
 
 			Statement stmt = connection.createStatement();
 		    String sql = "CREATE TABLE topic_value ("
-		    		+ "topic_id bigint unsigned NOT NULL UNIQUE AUTO_INCREMENT PRIMARY KEY,"
-		    		+ "topicname varchar(30) NOT NULL UNIQUE,"
+		    		+ "topic_id bigint unsigned NOT NULL UNIQUE AUTO_INCREMENT ,"
+		    		+ "topicname varchar(30) PRIMARY KEY,"
 		    		+ "created_at timestamp default current_timestamp"
 		    		+ ");";   
 		    stmt.executeUpdate(sql);
@@ -152,10 +151,12 @@ public class databaseSetup {
 			
 			Statement stmt = connection.createStatement();
 		    String sql = "CREATE TABLE topic_users ("
-		    		+ "topic_id bigint unsigned,"
-		    		+ "user_id bigint unsigned,"
-		    		+ "FOREIGN KEY (topic_id) REFERENCES topic_value(topic_id) ON DELETE CASCADE,"
-		    		+ "FOREIGN KEY (user_id) REFERENCES user_value(user_id) ON DELETE CASCADE"
+		    		+ "topicname varchar(30),"
+		    		+ "username varchar(60),"
+		    		+ "joined_at timestamp default current_timestamp,"
+		    		+ "left_group int unsigned DEFAULT 0,"
+		    		+ "FOREIGN KEY (topicname) REFERENCES topic_value(topicname),"
+		    		+ "FOREIGN KEY (username) REFERENCES user_value(username)"
 		    		+ ");";
 		    stmt.executeUpdate(sql);
 		    
@@ -173,13 +174,13 @@ public class databaseSetup {
 			Statement stmt = connection.createStatement();
 		    String sql = "CREATE TABLE topic_mess("
 		    		+ "mess_id bigint unsigned AUTO_INCREMENT,"
-		    		+ "user_id bigint unsigned,"
-		    		+ "topic_id bigint unsigned,"
+		    		+ "topicname varchar(30),"
+		    		+ "username varchar(60),"
 		    		+ "message TEXT,"
 		    		+ "send_at timestamp default current_timestamp,"
 		    		+ "PRIMARY KEY(mess_id),"
-		    		+ "FOREIGN KEY (topic_id) REFERENCES topic_users(topic_id),"
-		    		+ "FOREIGN KEY (user_id) REFERENCES topic_users(user_id) ON DELETE CASCADE"
+		    		+ "FOREIGN KEY (topicname) REFERENCES topic_users(topicname),"
+		    		+ "FOREIGN KEY (username) REFERENCES topic_users(username)"
 		    		+ ");";
 		    stmt.executeUpdate(sql);
 		    
@@ -197,13 +198,13 @@ public class databaseSetup {
 			Statement stmt = connection.createStatement();
 		    String sql = "CREATE TABLE direct_mess("
 		    		+ "mess_id bigint unsigned AUTO_INCREMENT,"
-		    		+ "sender_id bigint unsigned,"
-		    		+ "reciever_id bigint unsigned,"	
+		    		+ "sender_name varchar(60),"
+		    		+ "reciever_name varchar(60),"	
 		    		+ "message TEXT,"
 		    		+ "send_at timestamp default current_timestamp,"
 		    		+ "PRIMARY KEY (mess_id),"
-		    		+ "FOREIGN KEY (sender_id) REFERENCES user_value(user_id) ON DELETE CASCADE,"
-		    		+ "FOREIGN KEY (reciever_id) REFERENCES user_value(user_id) ON DELETE CASCADE"
+		    		+ "FOREIGN KEY (sender_name) REFERENCES user_value(username),"
+		    		+ "FOREIGN KEY (reciever_name) REFERENCES user_value(username)"
 		    		+ ");";
 		    stmt.executeUpdate(sql);
 		    
