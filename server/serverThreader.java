@@ -177,7 +177,7 @@ public class serverThreader extends Thread {
 	        for(serverThreader thread : threadList) {
 	        	
 	        	if(isTopic) { 
-	        		if(data.checkTopicUser(thread.toString(),sendTo)) { 
+	        		if(data.checkTopicUser(thread.getLogin(),sendTo) && thread.getLogin()!=login) { 
 		        		data.sendTopicMess(login, sendTo, body);
 		        		String outMsg = "msg " + sendTo + ":" + login + " " + body + "\n";
 			            thread.send(outMsg);
@@ -198,16 +198,22 @@ public class serverThreader extends Thread {
     }
 
     private void handleLogoff() throws IOException {
-        server.removeThreader(this);
-        List<serverThreader> threadList = server.getThreadList();
-        String offlineMsg = "Offline " + login + "\n";
-        for(serverThreader threader : threadList) {
-            if (!login.equals(threader.getLogin())) {
-                threader.send(offlineMsg);
-            }
-        }
-        login=null;
-        clientSocket.close();
+    	if(login==null) {
+	        server.removeThreader(this);
+	        List<serverThreader> threadList = server.getThreadList();
+	        String offlineMsg = "Offline " + login + "\n";
+	        for(serverThreader threader : threadList) {
+	            if (!login.equals(threader.getLogin())) {
+	                threader.send(offlineMsg);
+	            }
+	        }
+	        login=null;
+	        clientSocket.close();
+    	}
+    	else {
+    		String msg = "Try logining first!\n";
+			outputStream.write(msg.getBytes());
+    	}
     }
 
     private void handleLogin(OutputStream outputStream, String[] tokens) throws IOException {
