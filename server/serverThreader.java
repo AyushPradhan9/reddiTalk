@@ -139,7 +139,7 @@ public class serverThreader extends Thread {
 				outputStream.write(msg.getBytes());
 			}
 			else if(!data.userLogin(name,pass)) {
-				msg="Username and current password doesn't match!\nTry again!\n";
+				msg="Username and current password doesn't match. Try again!\n";
 				outputStream.write(msg.getBytes());
 			}
 		}
