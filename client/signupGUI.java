@@ -14,14 +14,14 @@ import javax.swing.JTextField;
 public class signupGUI extends JFrame implements ActionListener {
 
     Container container=getContentPane();
-    JLabel userLabel=new JLabel("Username:");
-    JLabel passwordLabel=new JLabel("Password:");
-    JLabel confirmLabel=new JLabel("Confirm:");
-    JTextField usernameField=new JTextField();
-    JPasswordField passwordField=new JPasswordField();  
-    JPasswordField confirmField=new JPasswordField();
-    JButton signupButton=new JButton("Signup");
-    JCheckBox showPassword=new JCheckBox("Show Password");
+    private JLabel userLabel=new JLabel("Username:");
+    private JLabel passwordLabel=new JLabel("Password:");
+    private JLabel confirmLabel=new JLabel("Confirm:");
+    private JTextField usernameField=new JTextField();
+    private JPasswordField passwordField=new JPasswordField();  
+    private JPasswordField confirmField=new JPasswordField();
+    private JButton signupButton=new JButton("Signup");
+    private JCheckBox showPassword=new JCheckBox("Show Password");
     private serverClient client;
 
 
@@ -36,10 +36,12 @@ public class signupGUI extends JFrame implements ActionListener {
         addActionEvent();
 
     }
+    
    public void setLayoutManager()
    {
        container.setLayout(null);
    }
+   
    public void setLocationAndSize()
    {
        userLabel.setBounds(50,100,100,30);
@@ -50,9 +52,8 @@ public class signupGUI extends JFrame implements ActionListener {
        confirmField.setBounds(150, 200, 150, 30);
        showPassword.setBounds(150,240,150,30);
        signupButton.setBounds(125,290,100,30);
-
-
    }
+   
    public void addComponentsToContainer()
    {
        container.add(userLabel);
@@ -64,19 +65,19 @@ public class signupGUI extends JFrame implements ActionListener {
        container.add(showPassword);
        container.add(signupButton);
    }
+   
    public void addActionEvent()
    {
        signupButton.addActionListener(this);
        showPassword.addActionListener(this);
    }
 
-
     @Override
     public void actionPerformed(ActionEvent e) {
          if (e.getSource() == signupButton) {
         	 String login=usernameField.getText();
      		 String password=passwordField.getText();
-     		 String confirm=passwordField.getText();
+     		 String confirm=confirmField.getText();
      		 if(password.compareTo(confirm)==0) {
      			 try {
 					String response=client.signup(login, password);

@@ -1,5 +1,4 @@
 import java.sql.*;
-
 public class serverDatabase {
 	databaseSetup database = new databaseSetup();
 	
@@ -179,7 +178,6 @@ public class serverDatabase {
 	    }
 		return false;
 	}
-	
 	
 	public void sendDirectMess(String sender, String reciever, String mess) {
 		try {

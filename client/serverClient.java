@@ -5,6 +5,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Vector;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -39,21 +42,6 @@ public class serverClient {
 				System.out.println("Message from: "+sendTo+" - "+msgBody);
 			}
 		});
-		
-		if(!client.connect()) {
-			System.out.println("Connect failed");
-		}
-		else {
-			System.out.println("Connect successfull");
-			if(client.login("ayush","ayush")) {
-				System.out.println("Login Successfull");
-				client.msg("ayush","hey");
-			}
-			else {
-				System.out.println("Login failed");
-			}
-			client.logoff();
-		}
 	}
 	
 	public void msg(String sendTo, String msgBody) throws IOException {
@@ -71,8 +59,7 @@ public class serverClient {
 		serverOut.write(cmd.getBytes());
 		
 		String response = bufferIn.readLine();
-		System.out.println("Response Line:"+response);
-		if("Login successful".equalsIgnoreCase(response)) {
+		if("Login Successful".equalsIgnoreCase(response)) {
 			startMsgReader();
 			return true;
 		}
@@ -83,6 +70,25 @@ public class serverClient {
 	
 	public String signup(String login,String password) throws IOException {
 		String cmd="signup "+login+" "+password+"\n";
+		serverOut.write(cmd.getBytes());
+		String response = bufferIn.readLine();
+		return response;
+	}
+	
+	public String update(String login,String oldPassword,String newPassword) throws IOException {
+		String cmd="update "+login+" "+oldPassword+" "+newPassword+"\n";
+		serverOut.write(cmd.getBytes());
+		String response = bufferIn.readLine();
+		return response;
+	}
+	
+	public void join(String topic) throws IOException {
+		String cmd="join "+topic+"\n";
+		serverOut.write(cmd.getBytes());
+	}
+	
+	public String leave(String topic) throws IOException {
+		String cmd="leave "+topic+"\n";
 		serverOut.write(cmd.getBytes());
 		String response = bufferIn.readLine();
 		return response;
@@ -151,13 +157,12 @@ public class serverClient {
 	public boolean connect() {
 		try {
 			this.socket = new Socket(serverName,serverPort);
-			System.out.println("Client port : "+socket.getLocalPort());
 			this.serverOut = socket.getOutputStream();
 			this.serverIn = socket.getInputStream();
 			this.bufferIn = new BufferedReader(new InputStreamReader(serverIn));
 			return true;
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println(e.getMessage());
 		}
 		return false;
 	}

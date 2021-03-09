@@ -55,7 +55,6 @@ public class serverThreader extends Thread {
                 else if ("login".equalsIgnoreCase(cmd)) {
                     handleLogin(outputStream, tokens);
                 }
-                
                 else if ("msg".equalsIgnoreCase(cmd)) {
                     String[] tokensMsg = StringUtils.split(line,null,3);
                     handleMessage(tokensMsg);
@@ -75,7 +74,8 @@ public class serverThreader extends Thread {
         clientSocket.close();
     }
     
-    private void handleLeave(OutputStream outputStream, String[] tokens) throws IOException {
+
+	private void handleLeave(OutputStream outputStream, String[] tokens) throws IOException {
 		String msg;
 		if(tokens.length==2 && data.userExist(login)) {
 			String topic = tokens[1];
@@ -93,29 +93,32 @@ public class serverThreader extends Thread {
 
     private void handleJoin(OutputStream outputStream,String[] tokens) throws IOException {
     	String msg;
-		if(tokens.length==2 && data.userExist(login)) {
+		if(tokens.length==2 && data.userExist(login) && tokens[1].charAt(0)=='#') {
 			String topic = tokens[1];
 			
 			if(!data.topicExist(topic)) {
 				data.topicSignup(topic);
 				data.setTopicUser(login, topic);
 				
-				msg = "Opened new topic!\nWelcome to "+topic+"\n";
-	            outputStream.write(msg.getBytes());
+				msg = "Opened new topic! Welcome to "+topic+"\n";
+				outputStream.write(msg.getBytes());
 			}
 			
 			else if(data.topicExist(topic) && !data.checkTopicUser(login,topic)) {
 				data.setTopicUser(login, topic);
 				
-				msg = "Joined existing topic!\nWelcome to "+topic+"\n";
+				msg = "Joined existing topic! Welcome to "+topic+"\n";
 				outputStream.write(msg.getBytes());
 			}
 			
 			else if(data.topicExist(topic) && data.checkTopicUser(login,topic)) {
-				
 				msg = "Welcome back to "+topic+"\n";
 				outputStream.write(msg.getBytes());
 			}
+		}
+		else if(tokens[1].charAt(0)!='#') {
+			msg = "Topic name should start with '#'\n";
+			outputStream.write(msg.getBytes());
 		}
 		else if(!data.userExist(login)) {
 			msg = "Try logining before joining a topic!\n";
@@ -153,7 +156,7 @@ public class serverThreader extends Thread {
 	            
 	        if(!data.userExist(name) && login==null) {
 	        	data.userSignup(name, password);
-	        	msg = "Signup successful\n";
+	        	msg = "Signup Successful\n";
 	            outputStream.write(msg.getBytes());
 	        }
 	        else if(!data.userExist(name) && login!=null) {
@@ -179,7 +182,7 @@ public class serverThreader extends Thread {
 	        	if(isTopic) { 
 	        		if(data.checkTopicUser(thread.getLogin(),sendTo) && thread.getLogin()!=login) { 
 		        		data.sendTopicMess(login, sendTo, body);
-		        		String outMsg = "msg " + sendTo + ":" + login + " " + body + "\n";
+		        		String outMsg = "msg " + login + " " + body + "\n";
 			            thread.send(outMsg);
 	        		}
 	        	}

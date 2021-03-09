@@ -1,4 +1,3 @@
-import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -8,14 +7,14 @@ import javax.swing.*;
 
 public class LoginGUI extends JFrame implements ActionListener {
 	 Container container=getContentPane();
-	 JLabel userLabel=new JLabel("Username:");
-	 JLabel passwordLabel=new JLabel("Password:");
-	 JTextField loginField=new JTextField();
-	 JPasswordField passwordField=new JPasswordField();
-	 JButton loginButton=new JButton("Login");
-	 JButton signupButton=new JButton("Signup");
-	 JCheckBox showPassword=new JCheckBox("Show Password");
-	private serverClient client;
+	 private JLabel userLabel=new JLabel("Username:");
+	 private JLabel passwordLabel=new JLabel("Password:");
+	 private JTextField loginField=new JTextField();
+	 private JPasswordField passwordField=new JPasswordField();
+	 private JButton loginButton=new JButton("Login");
+	 private JButton signupButton=new JButton("Signup");
+	 private JCheckBox showPassword=new JCheckBox("Show Password");
+	 private serverClient client;
 	
 	public LoginGUI() {
 		this.client=new serverClient("localhost",8818);
@@ -52,7 +51,6 @@ public class LoginGUI extends JFrame implements ActionListener {
 	}
 	
 	public void addActionEvent() {
-		System.out.println("here");
 		loginButton.addActionListener(this);
 		signupButton.addActionListener(this);
 		showPassword.addActionListener(this);
@@ -88,12 +86,12 @@ public class LoginGUI extends JFrame implements ActionListener {
 		String password=passwordField.getText();
 		try {
 			if(client.login(login, password)) {
-				userListGUI list=new userListGUI(client);
-				JFrame frame=new JFrame("User List");
-				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-				frame.setSize(300,400);
-				frame.getContentPane().add(list, BorderLayout.CENTER);
-				frame.setVisible(true);
+				userListGUI frame=new userListGUI(client);
+		        frame.setTitle("Main");
+		        frame.setVisible(true);
+		        frame.setBounds(10,10,300,630);
+		        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		        frame.setResizable(false);
 				
 				setVisible(false);
 			}
